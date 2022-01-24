@@ -42,13 +42,10 @@ function main () {
         gl.clear(gl.COLOR_BUFFER_BIT)
         for (let i = 0, len = g_points.length; i < len; i++) {
             const { x: currX, y: currY } = g_points[i]
-            const vertices = new Float32Array([currX, currY + 0.1, 0.0, currX + 0.1, currY, 0.0, currX, currY, 0.0])
+            const vertices = new Float32Array([currX - 0.1, currY - 0.1, 0.0, currX + 0.1, currY - 0.1, 0.0, currX - 0.1, currY + 0.1, 0.0, currX + 0.1, currY + 0.1, 0.0])
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
             gl.uniform4f(u_FragColor, ...g_points[i].c)
-            gl.drawArrays(gl.TRIANGLES, 0, n) // 实心三角形
-            // gl.drawArrays(gl.LINES, 0, n) // 线段
-            // gl.drawArrays(gl.LINE_STRIP, 0, n) // 连接所有点，不闭合，生成缺一条闭合边的空心三角形
-            // gl.drawArrays(gl.LINE_LOOP, 0, n) // 连接所有点，闭合，这里会生成空心三角形
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, n + 1)
         }
     }
 
