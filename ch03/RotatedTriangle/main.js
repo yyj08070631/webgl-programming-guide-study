@@ -13,21 +13,21 @@ function main () {
             return
         }
         const a_Position = gl.getAttribLocation(gl.program, 'a_Position')
-        const u_Translation = gl.getUniformLocation(gl.program, 'u_Translation')
+        const u_SinB = gl.getUniformLocation(gl.program, 'u_SinB')
+        const u_CosB = gl.getUniformLocation(gl.program, 'u_CosB')
         const u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor')
-        canvas.onmouseup = function (e) { click(e, gl, canvas, a_Position, u_Translation, u_FragColor) }
+        canvas.onmouseup = function (e) { click(e, gl, canvas, a_Position, u_SinB, u_CosB, u_FragColor) }
         gl.clearColor(0.0, 0.0, 0.0, 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT)
     }
 
     const g_points = []
-    function click (e, gl, canvas, a_Position, u_Translation, u_FragColor) {
-        const Tx = 0.1, Ty = 0.1, Tz = 0.0 
+    function click (e, gl, canvas, a_Position, u_SinB, u_CosB, u_FragColor) {
+        const ROTATE_DEG = Math.PI * 45.0 / 180.0
         let x = e.clientX
         let y = e.clientY
         const c = [Math.random(), Math.random(), Math.random(), 1.0]
         const rect = e.target.getBoundingClientRect()
-        const n = 3
 
         const vertexBuffer = gl.createBuffer()
         if (!vertexBuffer) {
@@ -35,8 +35,9 @@ function main () {
             return -1
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
-        gl.vertexAttribPointer(a_Position, n, gl.FLOAT, false, 0, 0)
-        gl.uniform4f(u_Translation, Tx, Ty, Tz, 0.0)
+        gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0)
+        gl.uniform1f(u_SinB, Math.sin(ROTATE_DEG))
+        gl.uniform1f(u_CosB, Math.cos(ROTATE_DEG))
         gl.enableVertexAttribArray(a_Position)
 
         x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2)
@@ -45,10 +46,15 @@ function main () {
         gl.clear(gl.COLOR_BUFFER_BIT)
         for (let i = 0, len = g_points.length; i < len; i++) {
             const { x: currX, y: currY } = g_points[i]
-            const vertices = new Float32Array([currX - 0.1, currY - 0.1, 0.0, currX + 0.1, currY - 0.1, 0.0, currX - 0.1, currY + 0.1, 0.0, currX + 0.1, currY + 0.1, 0.0])
+            const vertices = new Float32Array([
+                currX - 0.1, currY - 0.1, 0.0,
+                currX + 0.1, currY - 0.1, 0.0,
+                currX - 0.1, currY + 0.1, 0.0,
+                currX + 0.1, currY + 0.1, 0.0,
+            ])
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
             gl.uniform4f(u_FragColor, ...g_points[i].c)
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, n + 1)
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
         }
     }
 
