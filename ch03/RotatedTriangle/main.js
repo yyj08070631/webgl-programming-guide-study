@@ -23,7 +23,7 @@ function main () {
 
     const g_points = []
     function click (e, gl, canvas, a_Position, u_SinB, u_CosB, u_FragColor) {
-        const ROTATE_DEG = Math.PI * 45.0 / 180.0
+        const ROTATE_DEG = Math.PI * 180.0 / 180.0
         let x = e.clientX
         let y = e.clientY
         const c = [Math.random(), Math.random(), Math.random(), 1.0]
