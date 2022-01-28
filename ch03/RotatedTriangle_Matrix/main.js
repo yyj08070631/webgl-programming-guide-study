@@ -23,6 +23,7 @@ function main () {
     const g_points = []
     function click (e, gl, canvas, a_Position, u_xformMatrix, u_FragColor) {
         const ROTATE_DEG = Math.PI * 180.0 / 180.0
+        const Sx = 1.0, Sy = 2.0, Sz = 1.0
         let x = e.clientX
         let y = e.clientY
         const c = [Math.random(), Math.random(), Math.random(), 1.0]
@@ -35,8 +36,30 @@ function main () {
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
         gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0)
-        gl.uniform1f(u_SinB, Math.sin(ROTATE_DEG))
-        gl.uniform1f(u_CosB, Math.cos(ROTATE_DEG))
+        // 平移
+        // const xformMatrix = new Float32Array([
+        //     1.0, 0.0, 0.0, 0.1,
+        //     0.0, 1.0, 0.0, 0.1,
+        //     0.0, 0.0, 1.0, 0.0,
+        //     0.0, 0.0, 0.0, 1.0,
+        // ])
+        // 旋转
+        // const xformMatrix = new Float32Array([
+        //     Math.cos(ROTATE_DEG), -Math.sin(ROTATE_DEG), 0.0, 0.0,
+        //     Math.sin(ROTATE_DEG), Math.cos(ROTATE_DEG), 0.0, 0.0,
+        //     0.0, 0.0, 1.0, 0.0,
+        //     0.0, 0.0, 0.0, 1.0,
+        // ])
+        // 缩放
+        const xformMatrix = new Float32Array([
+            Sx, 0.0, 0.0, 0.0,
+            0.0, Sy, 0.0, 0.0,
+            0.0, 0.0, Sz, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        ])
+        gl.uniformMatrix4fv(u_xformMatrix, false, xformMatrix)
+        // gl.uniform1f(u_SinB, Math.sin(ROTATE_DEG))
+        // gl.uniform1f(u_CosB, Math.cos(ROTATE_DEG))
         gl.enableVertexAttribArray(a_Position)
 
         x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2)
