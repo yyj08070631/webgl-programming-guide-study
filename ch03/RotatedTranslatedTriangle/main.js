@@ -13,15 +13,15 @@ function main () {
             return
         }
         const a_Position = gl.getAttribLocation(gl.program, 'a_Position')
-        const u_xformMatrix = gl.getUniformLocation(gl.program, 'u_xformMatrix')
+        const u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix')
         const u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor')
-        canvas.onmouseup = function (e) { click(e, gl, canvas, a_Position, u_xformMatrix, u_FragColor) }
+        canvas.onmouseup = function (e) { click(e, gl, canvas, a_Position, u_ModelMatrix, u_FragColor) }
         gl.clearColor(0.0, 0.0, 0.0, 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT)
     }
 
     const g_points = []
-    function click (e, gl, canvas, a_Position, u_xformMatrix, u_FragColor) {
+    function click (e, gl, canvas, a_Position, u_ModelMatrix, u_FragColor) {
         let x = e.clientX
         let y = e.clientY
         const c = [Math.random(), Math.random(), Math.random(), 1.0]
@@ -34,30 +34,18 @@ function main () {
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
         gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0)
-        // 平移
-        // const xformMatrix = new Float32Array([
-        //     1.0, 0.0, 0.0, 0.1,
-        //     0.0, 1.0, 0.0, 0.1,
-        //     0.0, 0.0, 1.0, 0.0,
-        //     0.0, 0.0, 0.0, 1.0,
-        // ])
-        // 旋转
-        const xformMatrix = new Matrix4()
-        xformMatrix.setRotate(45.0, 0, 0, 1)
-        // 缩放
-        // const xformMatrix = new Float32Array([
-        //     Sx, 0.0, 0.0, 0.0,
-        //     0.0, Sy, 0.0, 0.0,
-        //     0.0, 0.0, Sz, 0.0,
-        //     0.0, 0.0, 0.0, 1.0,
-        // ])
-        gl.uniformMatrix4fv(u_xformMatrix, false, xformMatrix.elements)
-        // gl.uniform1f(u_SinB, Math.sin(ROTATE_DEG))
-        // gl.uniform1f(u_CosB, Math.cos(ROTATE_DEG))
+        // 旋转后平移
+        const modelMatrix = new Matrix4()
+            .setTranslate(0.0, 0.5, 0.0)
+            .rotate(45.0, 0, 0, 1)
+            .scale(1, 2, 1)
+        gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements)
         gl.enableVertexAttribArray(a_Position)
 
-        x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2)
-        y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2)
+        // x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2)
+        // y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2)
+        x = 0
+        y = 0
         g_points.push({ x, y, c })
         gl.clear(gl.COLOR_BUFFER_BIT)
         for (let i = 0, len = g_points.length; i < len; i++) {
