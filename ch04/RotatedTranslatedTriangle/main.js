@@ -36,9 +36,12 @@ function main () {
         gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0)
         // 旋转后平移
         const modelMatrix = new Matrix4()
-            .setTranslate(0.0, 0.5, 0.0)
-            .rotate(45.0, 0, 0, 1)
-            .scale(1, 2, 1)
+        // Calculate a model matrix
+        var ANGLE = 60.0; // The rotation angle
+        var Tx = 0.5;     // Translation distance
+        modelMatrix.translate(Tx, 0, 0);        // Multiply modelMatrix by the calculated translation matrix
+        modelMatrix.rotate(ANGLE, 0, 0, 1);  // Set rotation matrix
+            // .scale(1, 2, 1)
         gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements)
         gl.enableVertexAttribArray(a_Position)
 
@@ -51,14 +54,13 @@ function main () {
         for (let i = 0, len = g_points.length; i < len; i++) {
             const { x: currX, y: currY } = g_points[i]
             const vertices = new Float32Array([
-                currX - 0.1, currY - 0.1, 0.0,
-                currX + 0.1, currY - 0.1, 0.0,
-                currX - 0.1, currY + 0.1, 0.0,
-                currX + 0.1, currY + 0.1, 0.0,
+                currX, currY + 0.3, 0.0,
+                currX + 0.3, currY - 0.3, 0.0,
+                currX - 0.3, currY - 0.3, 0.0,
             ])
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
             gl.uniform4f(u_FragColor, ...g_points[i].c)
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 3)
         }
     }
 
