@@ -15,53 +15,63 @@ function main () {
         const a_Position = gl.getAttribLocation(gl.program, 'a_Position')
         const u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix')
         const u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor')
-        canvas.onmouseup = function (e) { click(e, gl, canvas, a_Position, u_ModelMatrix, u_FragColor) }
+
+        // 设置画布背景色
         gl.clearColor(0.0, 0.0, 0.0, 1.0)
-        gl.clear(gl.COLOR_BUFFER_BIT)
-    }
-
-    const g_points = []
-    function click (e, gl, canvas, a_Position, u_ModelMatrix, u_FragColor) {
-        let x = e.clientX
-        let y = e.clientY
-        const c = [Math.random(), Math.random(), Math.random(), 1.0]
-        const rect = e.target.getBoundingClientRect()
-
+        // 常量
+        const ANGLE_STEP = 45
+        // 初始化
+        const modelMatrix = new Matrix4()
+        const vertices = new Float32Array([
+            0.0, 0.3, 0.0,
+            +0.3, -0.3, 0.0,
+            -0.3, -0.3, 0.0,
+        ])
+        let currAngle = 0.0 // 当前旋转角度
+        // 创建缓冲区对象
         const vertexBuffer = gl.createBuffer()
         if (!vertexBuffer) {
             console.log('Failed to create the buffer object')
             return -1
         }
+        // 将缓冲区对象绑定到全局的缓冲区信息中
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+        // 向缓冲区对象中写入数据
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+        // 将缓冲区对象分配给 a_Position 变量
         gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0)
-        // 旋转后平移
-        const modelMatrix = new Matrix4()
-        // Calculate a model matrix
-        var ANGLE = 60.0; // The rotation angle
-        var Tx = 0.5;     // Translation distance
-        modelMatrix.translate(Tx, 0, 0);        // Multiply modelMatrix by the calculated translation matrix
-        modelMatrix.rotate(ANGLE, 0, 0, 1);  // Set rotation matrix
-            // .scale(1, 2, 1)
-        gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements)
+        // 连接 a_Position 变量与分配给它的缓冲区对象
         gl.enableVertexAttribArray(a_Position)
-
-        // x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2)
-        // y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2)
-        x = 0
-        y = 0
-        g_points.push({ x, y, c })
-        gl.clear(gl.COLOR_BUFFER_BIT)
-        for (let i = 0, len = g_points.length; i < len; i++) {
-            const { x: currX, y: currY } = g_points[i]
-            const vertices = new Float32Array([
-                currX, currY + 0.3, 0.0,
-                currX + 0.3, currY - 0.3, 0.0,
-                currX - 0.3, currY - 0.3, 0.0,
-            ])
-            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
-            gl.uniform4f(u_FragColor, ...g_points[i].c)
+        // 写颜色
+        gl.uniform4f(u_FragColor, 1.0, 1.0, 1.0, 1.0)
+        // 基于时间校正 raf 执行频率
+        const next = (() => {
+            let start = Date.now()
+            return angle => {
+                const now = Date.now()
+                const res = angle + (now - start) / 1000 * ANGLE_STEP
+                start = now
+                return res
+            }
+        })()
+        // 绘制函数
+        const draw = () => {
+            // 绘制
+            modelMatrix.setRotate(currAngle, 0, 0, 1).translate(0.3, 0, 0)
+            // 传入转换矩阵
+            gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements)
+            // 绘制前先清空画布
+            gl.clear(gl.COLOR_BUFFER_BIT)
+            // 绘制
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 3)
         }
+        // 递归调用
+        const tick = () => {
+            currAngle = next(currAngle)
+            draw()
+            requestAnimationFrame(tick)
+        }
+        tick()
     }
 
     function loadShaderFile (gl, fileName, shader) {
