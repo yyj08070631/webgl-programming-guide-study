@@ -22,7 +22,7 @@ function main () {
             console.log('Failed to set the positions of the vertices')
             return
         }
-        gl.drawArrays(gl.POINTS, 0, n)
+        gl.drawArrays(gl.TRIANGLES, 0, n)
     }
 
     function initVertexBuffers (gl, a_Position, a_PointSize, a_Color) {
