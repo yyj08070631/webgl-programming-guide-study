@@ -30,10 +30,10 @@ function main () {
 
     function initVertexBuffers (gl, a_Position, a_TexCoord) {
         const vertexTexCoordBuffer = new Float32Array([
-            -0.5, 0.5, 0.0, 1.0,
+            -0.5, 0.5, 0.0, 4.0,
             -0.5, -0.5, 0.0, 0.0,
-            0.5, 0.5, 1.0, 1.0,
-            0.5, -0.5, 1.0, 0.0,
+            0.5, 0.5, 4.0, 4.0,
+            0.5, -0.5, 4.0, 0.0,
         ])
         const FSIZE = vertexTexCoordBuffer.BYTES_PER_ELEMENT
         const n = 4
@@ -78,6 +78,10 @@ function main () {
 
         // 配置纹理参数
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
         // 配置纹理图像
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image)
 
