@@ -1,5 +1,6 @@
 let VSHADER_SOURCE = null
 let FSHADER_SOURCE = null
+let flag = 0
 
 function main () {
     const canvas = document.getElementById('webgl')
@@ -30,10 +31,10 @@ function main () {
 
     function initVertexBuffers (gl, a_Position, a_TexCoord) {
         const vertexTexCoordBuffer = new Float32Array([
-            -0.5, 0.5, 0.0, 4.0,
+            -0.5, 0.5, 0.0, 1.0,
             -0.5, -0.5, 0.0, 0.0,
-            0.5, 0.5, 4.0, 4.0,
-            0.5, -0.5, 4.0, 0.0,
+            0.5, 0.5, 1.0, 1.0,
+            0.5, -0.5, 1.0, 0.0,
         ])
         const FSIZE = vertexTexCoordBuffer.BYTES_PER_ELEMENT
         const n = 4
@@ -57,38 +58,42 @@ function main () {
     }
 
     function initTextures (gl, n) {
-        const texture = gl.createTexture()
-        const u_Sampler = gl.getUniformLocation(gl.program, 'u_Sampler')
-        const image = new Image()
+        const texture0 = gl.createTexture()
+        const texture1 = gl.createTexture()
+        const u_Sampler0 = gl.getUniformLocation(gl.program, 'u_Sampler0')
+        const u_Sampler1 = gl.getUniformLocation(gl.program, 'u_Sampler1')
+        const image0 = new Image()
+        const image1 = new Image()
 
-        image.onload = () => { loadTexture(gl, n, texture, u_Sampler, image) }
-        image.src = './sky.jpg'
+        image0.onload = () => { loadTexture(gl, n, texture0, u_Sampler0, image0, 0) }
+        image1.onload = () => { loadTexture(gl, n, texture1, u_Sampler1, image1, 1) }
+        image0.src = './sky.jpg',
+        image1.src = './circle.gif'
 
         return true
     }
     
 
-    function loadTexture (gl, n, texture, u_Sampler, image) {
+    function loadTexture (gl, n, texture, u_Sampler, image, texUnit) {
+        flag++
         // 对纹理图像进行y轴反转
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
-        // 开启0号纹理单元
-        gl.activeTexture(gl.TEXTURE0)
+        // 开启texUnit号纹理单元
+        gl.activeTexture(gl[`TEXTURE${texUnit}`])
         // 向target绑定纹理对象
         gl.bindTexture(gl.TEXTURE_2D, texture)
 
         // 配置纹理参数
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
         // 配置纹理图像
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image)
 
-        // 将0号纹理传递给着色器
-        gl.uniform1i(u_Sampler, 0)
+        // 将texUnit号纹理传递给着色器
+        gl.uniform1i(u_Sampler, texUnit)
 
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, n)
+        if (flag === 2) {
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, n)
+        }
     }
 
     function loadShaderFile (gl, fileName, shader) {
