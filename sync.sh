@@ -18,7 +18,7 @@ git stash pop
 git add --all
 
 # 提交更改
-git commit -m "$1"
+git commit -m "Update by sync.sh"
 
 # 推送到远程仓库
 git push --force origin main
