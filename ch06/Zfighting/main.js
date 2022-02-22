@@ -27,7 +27,7 @@ function main () {
         const u_ProjMatrix = gl.getUniformLocation(gl.program, 'u_ProjMatrix')
         const u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix')
         const viewMatrix = new Matrix4()
-        const projMatrix = new Matrix4().setPerspective(30, canvas.width / canvas.clientHeight, 1, 100)
+        const projMatrix = new Matrix4().setPerspective(30, canvas.width / canvas.height, 1, 100)
         const modelMatrix = new Matrix4()
         let g_eyeX = 0, g_eyeY = 0, g_eyeZ = 15, currDeg = 0
 
