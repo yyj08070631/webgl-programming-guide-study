@@ -27,6 +27,7 @@ function main () {
         const u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix')
         const u_LightColor = gl.getUniformLocation(gl.program, 'u_LightColor')
         const u_LightDirection = gl.getUniformLocation(gl.program, 'u_LightDirection')
+        const u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
         const lightDirection = new Vector3([0.5, 3.0, 4.0]).normalize()
         const mvpMatrix = new Matrix4()
             .setPerspective(30, 1, 1, 100)
@@ -36,6 +37,7 @@ function main () {
                 0, 1, 0, // 上方向
             )
         gl.uniform3f(u_LightColor, 1.0, 1.0, 1.0)
+        gl.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2)
         gl.uniform3fv(u_LightDirection, lightDirection.elements)
 
         draw()
