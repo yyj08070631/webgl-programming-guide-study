@@ -26,86 +26,95 @@ function main () {
 
         const u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix')
         const u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix')
-        const u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix')
         const u_LightColor = gl.getUniformLocation(gl.program, 'u_LightColor')
         const u_LightPosition = gl.getUniformLocation(gl.program, 'u_LightPosition')
         const u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
         
-        const modelMatrix = new Matrix4()
         const vpMatrix = new Matrix4()
             .setPerspective(30, 1, 1, 100)
             .lookAt(
-                3, 3, 7, // 视点
+                10, 40, 40, // 视点
                 0, 0, 0, // 观察目标点
                 0, 1, 0, // 上方向
             )
         gl.uniform3f(u_LightColor, 1.0, 1.0, 1.0)
         gl.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2)
-        gl.uniform3f(u_LightPosition, 2.0, 2.0, 2.0)
+        gl.uniform3f(u_LightPosition, 8.0, 8.0, 15.0)
 
-        let currDeg = 0
+        const ANGLE_STEP = 3.0
+        let g_arm1Angle = 90.0, g_joint1Angle = 0.0
+        const g_modelMatrix = new Matrix4(), g_mvpMatrix = new Matrix4()
+
         draw()
-        function draw () {
-            if (currDeg + 1 > 360) {
-                currDeg = -360
-            } else {
-                currDeg++
+        document.onkeydown = e => {
+            const map = {
+                // 方向键右
+                39: () => { g_arm1Angle = (g_arm1Angle + ANGLE_STEP) % 360 },
+                // 方向键左
+                37: () => { g_arm1Angle = (g_arm1Angle - ANGLE_STEP) % 360 },
+                // 方向键上
+                38: () => { if (g_joint1Angle < 135.0) g_joint1Angle += ANGLE_STEP },
+                // 方向键下
+                40: () => { if (g_joint1Angle > -135.0) g_joint1Angle -= ANGLE_STEP },
             }
-            modelMatrix.setRotate(currDeg, 0, 1, 0)
-            gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements)
-            const mvpMatrix = new Matrix4().set(vpMatrix).multiply(modelMatrix)
-            gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements)
-
-            const normalMatrix = new Matrix4()
-                .setInverseOf(modelMatrix) 
-                .transpose()
-            gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements)
-            // gl.enable(gl.POLYGON_OFFSET_FILL)
-            // gl.polygonOffset(1.0, 1.0)
+            const fn = map[e.keyCode] || (() => { console.log(`Key ${e.keyCode} not found.`) })
+            fn()
+            draw()
+        }
+        function draw () {
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+            // arm1
+            g_modelMatrix.setTranslate(0.0, -10.0, 0.0).rotate(g_arm1Angle, 0, 1, 0).scale(1, 1, 1)
+            drawBox()
+            // arm2
+            g_modelMatrix.translate(0.0, 10.0, 0.0).rotate(g_joint1Angle, 0, 0, 1).scale(1, 1, 1)
+            drawBox()
+        }
+        function drawBox () {
+            const g_normalMatrix = new Matrix4()
+
+            g_mvpMatrix.set(vpMatrix).multiply(g_modelMatrix)
+            gl.uniformMatrix4fv(u_MvpMatrix, false, g_mvpMatrix.elements)
+
+            g_normalMatrix.setInverseOf(g_modelMatrix).transpose()
+            gl.uniformMatrix4fv(u_NormalMatrix, false, g_normalMatrix.elements)
+
             gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0)
-            requestAnimationFrame(draw)
         }
     }
 
     function initVertexBuffers (gl, a_Position, a_Color, a_Normal) {
-        // Create a cube
-        //    v6----- v5
-        //   /|      /|
-        //  v1------v0|
-        //  | |     | |
-        //  | |v7---|-|v4
-        //  |/      |/
-        //  v2------v3
-      
-        const vertices = new Float32Array([   // Vertex coordinates
-           1.0, 1.0, 1.0,  -1.0, 1.0, 1.0,  -1.0,-1.0, 1.0,   1.0,-1.0, 1.0,  // v0-v1-v2-v3 front
-           1.0, 1.0, 1.0,   1.0,-1.0, 1.0,   1.0,-1.0,-1.0,   1.0, 1.0,-1.0,  // v0-v3-v4-v5 right
-           1.0, 1.0, 1.0,   1.0, 1.0,-1.0,  -1.0, 1.0,-1.0,  -1.0, 1.0, 1.0,  // v0-v5-v6-v1 up
-          -1.0, 1.0, 1.0,  -1.0, 1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0,-1.0, 1.0,  // v1-v6-v7-v2 left
-          -1.0,-1.0,-1.0,   1.0,-1.0,-1.0,   1.0,-1.0, 1.0,  -1.0,-1.0, 1.0,  // v7-v4-v3-v2 down
-           1.0,-1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0, 1.0,-1.0,   1.0, 1.0,-1.0   // v4-v7-v6-v5 back
+        // Vertex coordinates锛坅 cuboid 3.0 in width, 10.0 in height, and 3.0 in length with its origin at the center of its bottom)
+        const vertices = new Float32Array([
+          1.5, 10.0, 1.5, -1.5, 10.0, 1.5, -1.5,  0.0, 1.5,  1.5,  0.0, 1.5, // v0-v1-v2-v3 front
+          1.5, 10.0, 1.5,  1.5,  0.0, 1.5,  1.5,  0.0,-1.5,  1.5, 10.0,-1.5, // v0-v3-v4-v5 right
+          1.5, 10.0, 1.5,  1.5, 10.0,-1.5, -1.5, 10.0,-1.5, -1.5, 10.0, 1.5, // v0-v5-v6-v1 up
+         -1.5, 10.0, 1.5, -1.5, 10.0,-1.5, -1.5,  0.0,-1.5, -1.5,  0.0, 1.5, // v1-v6-v7-v2 left
+         -1.5,  0.0,-1.5,  1.5,  0.0,-1.5,  1.5,  0.0, 1.5, -1.5,  0.0, 1.5, // v7-v4-v3-v2 down
+          1.5,  0.0,-1.5, -1.5,  0.0,-1.5, -1.5, 10.0,-1.5,  1.5, 10.0,-1.5  // v4-v7-v6-v5 back
         ]);
       
         const colors = new Float32Array([    // Colors
-            1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v1-v2-v3 front
-            1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v3-v4-v5 right
-            1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v5-v6-v1 up
-            1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v1-v6-v7-v2 left
-            1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v7-v4-v3-v2 down
-            1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v4-v7-v6-v5 back
+            1, 1, 0,   1, 1, 0,   1, 1, 0,  1, 1, 0,     // v0-v1-v2-v3 front
+            1, 1, 0,   1, 1, 0,   1, 1, 0,  1, 1, 0,     // v0-v3-v4-v5 right
+            1, 1, 0,   1, 1, 0,   1, 1, 0,  1, 1, 0,     // v0-v5-v6-v1 up
+            1, 1, 0,   1, 1, 0,   1, 1, 0,  1, 1, 0,     // v1-v6-v7-v2 left
+            1, 1, 0,   1, 1, 0,   1, 1, 0,  1, 1, 0,     // v7-v4-v3-v2 down
+            1, 1, 0,   1, 1, 0,   1, 1, 0,  1, 1, 0,     // v4-v7-v6-v5 back
          ]);
-
-        const normals = new Float32Array([    // Normal
-            0.0, 0.0, 1.0,   0.0, 0.0, 1.0,   0.0, 0.0, 1.0,   0.0, 0.0, 1.0,  // v0-v1-v2-v3 front
-            1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,  // v0-v3-v4-v5 right
-            0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   0.0, 1.0, 0.0,  // v0-v5-v6-v1 up
-           -1.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  // v1-v6-v7-v2 left
-            0.0,-1.0, 0.0,   0.0,-1.0, 0.0,   0.0,-1.0, 0.0,   0.0,-1.0, 0.0,  // v7-v4-v3-v2 down
-            0.0, 0.0,-1.0,   0.0, 0.0,-1.0,   0.0, 0.0,-1.0,   0.0, 0.0,-1.0   // v4-v7-v6-v5 back
+      
+        // Normal
+        const normals = new Float32Array([
+          0.0, 0.0, 1.0,  0.0, 0.0, 1.0,  0.0, 0.0, 1.0,  0.0, 0.0, 1.0, // v0-v1-v2-v3 front
+          1.0, 0.0, 0.0,  1.0, 0.0, 0.0,  1.0, 0.0, 0.0,  1.0, 0.0, 0.0, // v0-v3-v4-v5 right
+          0.0, 1.0, 0.0,  0.0, 1.0, 0.0,  0.0, 1.0, 0.0,  0.0, 1.0, 0.0, // v0-v5-v6-v1 up
+         -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // v1-v6-v7-v2 left
+          0.0,-1.0, 0.0,  0.0,-1.0, 0.0,  0.0,-1.0, 0.0,  0.0,-1.0, 0.0, // v7-v4-v3-v2 down
+          0.0, 0.0,-1.0,  0.0, 0.0,-1.0,  0.0, 0.0,-1.0,  0.0, 0.0,-1.0  // v4-v7-v6-v5 back
         ]);
       
-        const indices = new Uint8Array([       // Indices of the vertices
+        // Indices of the vertices
+        const indices = new Uint8Array([
            0, 1, 2,   0, 2, 3,    // front
            4, 5, 6,   4, 6, 7,    // right
            8, 9,10,   8,10,11,    // up
