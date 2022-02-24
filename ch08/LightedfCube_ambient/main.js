@@ -25,26 +25,40 @@ function main () {
         }
 
         const u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix')
+        const u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix')
         const u_LightColor = gl.getUniformLocation(gl.program, 'u_LightColor')
         const u_LightDirection = gl.getUniformLocation(gl.program, 'u_LightDirection')
         const u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
         const lightDirection = new Vector3([0.5, 3.0, 4.0]).normalize()
-        const mvpMatrix = new Matrix4()
-            .setPerspective(30, 1, 1, 100)
-            .lookAt(
-                3, 3, 7, // 视点
-                0, 0, 0, // 观察目标点
-                0, 1, 0, // 上方向
-            )
+        
+        const modelMatrix = new Matrix4()
         gl.uniform3f(u_LightColor, 1.0, 1.0, 1.0)
         gl.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2)
         gl.uniform3fv(u_LightDirection, lightDirection.elements)
 
+        let currDeg = 0
         draw()
-
         function draw () {
-            mvpMatrix.rotate(1, 0, 1, 0)
+            if (currDeg + 1 > 360) {
+                currDeg = -360
+            } else {
+                currDeg++
+            }
+            modelMatrix.setRotate(currDeg, 0, 1, 0)
+            const mvpMatrix = new Matrix4()
+                .setPerspective(30, 1, 1, 100)
+                .lookAt(
+                    3, 3, 7, // 视点
+                    0, 0, 0, // 观察目标点
+                    0, 1, 0, // 上方向
+                )
+                .multiply(modelMatrix)
             gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements)
+
+            const normalMatrix = new Matrix4()
+                .setInverseOf(modelMatrix) 
+                .transpose()
+            gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements)
             // gl.enable(gl.POLYGON_OFFSET_FILL)
             // gl.polygonOffset(1.0, 1.0)
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
