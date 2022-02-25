@@ -1,0 +1,22 @@
+{
+  "name": "webgl-programming-guide-study",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "express": "^4.17.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:22/yyj08070631/webgl-programming-guide-study.git"
+  },
+  "author": "",
+  "license": "ISC"
+}
